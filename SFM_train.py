@@ -196,9 +196,9 @@ def eval_batch(batch_fea, nframe, tparams, omega, options):
 		x_input = batch_fea[x_start:x_end]
 
 		outs = tp(x_input)
-		log_like_fr = [None]*nframe[i]
-		for j in range(nframe[i]):
-			log_like_fr[j] = np.dot(x_input[j], np.log(softmax(np.dot(tparams['W'].get_value(), outs[j])+tparams['b'].get_value())))
+		log_like_fr = [None]*(nframe[i]-1)
+		for j in range(nframe[i]-1):
+			log_like_fr[j] = np.dot(x_input[j+1], np.log(softmax(outs[j])))
 		log_like[i] = np.mean(log_like_fr)
 	return log_like
 
@@ -215,7 +215,7 @@ def build_model_train(tparams, train_opt):
         x = t_f[x_start:x_end]
 
         outs = SFM(tparams, x, omega, train_opt)
-        log_lik = T.nlinalg.trace(T.dot(x, T.log(T.nnet.softmax(outs)).transpose()))
+        log_lik = T.nlinalg.trace(T.dot(x[1:], T.log(T.nnet.softmax(outs[:-1])).transpose()))
         
         total_cost = cost_prev+(-log_lik)
         return total_cost
